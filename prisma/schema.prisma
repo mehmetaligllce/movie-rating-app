@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String      @id @default(cuid())
+  name          String?
+  email         String?     @unique
+  emailVerified DateTime?
+  image         String      @default("https://cdn-icons-png.flaticon.com/512/149/149071.png")
+  createdAt     DateTime    @default(now())
+  watchList     WatchList[]
+  watched       Watched[]
+  accounts      Account[]
+  sessions      Session[]
+}
+
+model WatchList {
+  id      String   @id @default(cuid())
+  userId  String
+  user    User     @relation(fields: [userId], references: [id])
+  movieId Int
+  title   String
+  poster  String   @default("https://placehold.co/300x450?text=No+Poster")
+  isAdded Boolean  @default(false)
+  addedAt DateTime @default(now())
+
+  @@unique([userId, movieId])
+}
+
+model Watched {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  movieId   Int
+  title     String
+  poster    String   @default("https://placehold.co/300x450?text=No+Poster")
+  rating    Int?
+  watchedAt DateTime @default(now())
+
+  @@unique([userId, movieId])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  userId            String
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  expires      DateTime
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
